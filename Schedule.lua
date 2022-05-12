@@ -5,7 +5,8 @@ local rowCount = 4
 
 local requestKeystoneCheck
 
--- 1: Overflowing, 2: Skittish, 3: Volcanic, 4: Necrotic, 5: Teeming, 6: Raging, 7: Bolstering, 8: Sanguine, 9: Tyrannical, 10: Fortified, 11: Bursting, 12: Grievous, 13: Explosive, 14: Quaking 3|8|10
+-- 1: Overflowing, 2: Skittish, 3: Volcanic, 4: Necrotic, 5: Teeming, 6: Raging, 7: Bolstering, 8: Sanguine, 9: Tyrannical, 
+-- 10: Fortified, 11: Bursting, 12: Grievous, 13: Explosive, 14: Quaking 3|8|10
 local affixSchedule = {
 	{ 6, 3, 9 },
 	{ 5, 13, 10 },
@@ -20,19 +21,46 @@ local affixSchedule = {
 	{ 7, 13, 9 },
 	{ 11, 14, 10 },
 }
+
+local x5affixSchedule = {
+	{ 6, 4, 10 },
+	{ 7, 1, 9 },
+	{ 8, 3, 10 },
+	{ 5, 4, 9 },
+	{ 6, 3, 9 },
+	{ 7, 2, 10 },
+	{ 8, 1, 9 },
+	{ 5, 2, 10 },
+}
+
 local currentWeek
 
 local function UpdateAffixes()
+	local realmName = GetRealmName()
 	if requestKeystoneCheck then
 		Mod:CheckInventoryKeystone()
 	end
-	if currentWeek then
+	if currentWeek and realmName == "Legion x100" then
+		for i = 1, rowCount do
+			local entry = Mod.Frame.Entries[i]
+			entry:Show()
+			--#affixSchedule == 12
+			local scheduleWeek = (currentWeek - 2 + i) % (#affixSchedule) + 1
+			local affixes = affixSchedule[scheduleWeek]
+	
+			for j = 1, #affixes do
+				local affix = entry.Affixes[j]
+				affix:SetUp(affixes[j])
+			end
+		end
+		Mod.Frame.Label:Hide()
+	elseif currentWeek and realmName == "Legion x5" then
 		for i = 1, rowCount do
 			local entry = Mod.Frame.Entries[i]
 			entry:Show()
 
-			local scheduleWeek = (currentWeek - 2 + i) % (#affixSchedule) + 1
-			local affixes = affixSchedule[scheduleWeek]
+			local scheduleWeek = (currentWeek - 2 + i) % (#x5affixSchedule) + 1
+			local affixes = x5affixSchedule[scheduleWeek]
 			for j = 1, #affixes do
 				local affix = entry.Affixes[j]
 				affix:SetUp(affixes[j])
@@ -150,6 +178,7 @@ function Mod:CheckInventoryKeystone()
 			local _, _, _, _, _, _, slotLink = GetContainerItemInfo(container, slot)
 			local itemString = slotLink and slotLink:match("|Hkeystone:([0-9:]+)|h(%b[])|h")
 			if itemString then
+				-- 1  item:  197:29:5:14:10
 				local info = { strsplit(":", itemString) }
 				local mapLevel = tonumber(info[2])
 				if mapLevel >= 7 then
