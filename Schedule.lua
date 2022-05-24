@@ -2,7 +2,7 @@ local ADDON, Addon = ...
 local Mod = Addon:NewModule('Schedule')
 
 local rowCount = 4
-
+local realmName = GetRealmName()
 local requestKeystoneCheck
 
 -- 1: Overflowing, 2: Skittish, 3: Volcanic, 4: Necrotic, 5: Teeming, 6: Raging, 7: Bolstering, 8: Sanguine, 9: Tyrannical, 
@@ -21,7 +21,6 @@ local affixSchedule = {
 	{ 7, 13, 9 },
 	{ 11, 14, 10 },
 }
---week=7 { 6, 3, 9 },
 --week=8  7, 2, 10 }
 local x5affixSchedule = {
 	{ 8, 1, 9 },
@@ -37,7 +36,6 @@ local x5affixSchedule = {
 local currentWeek
 
 local function UpdateAffixes()
-	local realmName = GetRealmName()
 	if requestKeystoneCheck then
 		Mod:CheckInventoryKeystone()
 	end
@@ -59,7 +57,6 @@ local function UpdateAffixes()
 		for i = 1, rowCount do
 			local entry = Mod.Frame.Entries[i]
 			entry:Show()
-
 			local scheduleWeek = (currentWeek - 2 + i) % (#x5affixSchedule) + 1
 			local affixes = x5affixSchedule[scheduleWeek]
 			for j = 1, #affixes do
@@ -173,6 +170,7 @@ end
 
 function Mod:CheckInventoryKeystone()
 	currentWeek = nil
+
 	for container=BACKPACK_CONTAINER, NUM_BAG_SLOTS do
 		local slots = GetContainerNumSlots(container)
 		for slot=1, slots do
@@ -183,10 +181,19 @@ function Mod:CheckInventoryKeystone()
 				local info = { strsplit(":", itemString) }
 				local mapLevel = tonumber(info[2])
 				if mapLevel >= 7 then
-					local affix1, affix2 = tonumber(info[3]), tonumber(info[4])
-					for index, affixes in ipairs(affixSchedule) do
-						if affix1 == affixes[1] and affix2 == affixes[2] then
-							currentWeek = index
+					if realmName == "Legion x100" then
+						local affix1, affix2 = tonumber(info[3]), tonumber(info[4])
+						for index, affixes in ipairs(affixSchedule) do
+							if affix1 == affixes[1] and affix2 == affixes[2] then
+								currentWeek = index
+							end
+						end
+					elseif realmName == "Legion x5" then
+						local affix1, affix2 = tonumber(info[3]), tonumber(info[4])
+						for index, affixes in ipairs(x5affixSchedule) do
+							if affix1 == affixes[1] and affix2 == affixes[2] then
+								currentWeek = index
+							end
 						end
 					end
 				end
